@@ -30,6 +30,16 @@ SST12 <- rast('data/average_annual_sst_2012.tif')
 
 ## Merged SST rasters
 SST_merge <- c(SST8, SST9, SST10, SST11, SST12)
+
+## find the mean SST from 2008-2012 (e.g. create single raster of average SST)
+SST_mean <- mean(SST_merge, na.rm = TRUE)
+
+plot(SST_mean)
+
+## convert average SST from Kelvin to Celsius (hint: subtract by 273.15)
+SST_celsius <- SST_mean - 273.15
+
+plot(SST_celsius)
 ```
 
 ```{r}
@@ -53,20 +63,17 @@ outputs:
 map of EEZ regions colored by amount of suitable area
 species name should be included in the map’s title
 
+cell_size function to calculate area (rasterize the vector dataset) Specificy what value you want to cell to take a value on ?rasterize, second raster is to what raster to turn it into
+
 ```{r}
 # Process data
-## find the mean SST from 2008-2012 (e.g. create single raster of average SST)
-
-# Week 4 
-# zonal(zion_elevation, reclassified, fun = "mean") %>%
-#   kable(col.names = c("Elevation zone", "Mean elevation (m)")) %>% 
-#   kable_styling(bootstrap_options = "striped")
-
-## convert average SST from Kelvin to Celsius (hint: subtract by 273.15)
 
 ## crop depth raster to match the extent of the SST raster (note: the resolutions of the SST and depth data do not match)
 
+depth_crop <- crop(depth, SST_celsius)
+
 ## resample the depth data to match the resolution of the SST data using the bilinear method approach
+
 
 ## check that the depth and SST match in resolution, extent, and coordinate reference system (hint: can the rasters be stacked?)
 
