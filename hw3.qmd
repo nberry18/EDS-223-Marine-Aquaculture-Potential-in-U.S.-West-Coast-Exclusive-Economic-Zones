@@ -30,6 +30,7 @@ SST12 <- rast('data/average_annual_sst_2012.tif')
 
 ## Merged SST rasters
 SST_merge <- c(SST8, SST9, SST10, SST11, SST12)
+plot(SST_merge)
 
 ## find the mean SST from 2008-2012 (e.g. create single raster of average SST)
 SST_mean <- mean(SST_merge, na.rm = TRUE)
@@ -39,31 +40,17 @@ plot(SST_mean)
 ## convert average SST from Kelvin to Celsius (hint: subtract by 273.15)
 SST_celsius <- SST_mean - 273.15
 
-plot(SST_celsius)
+crs(SST8)
 ```
 
 ```{r}
 # Check for same CRS for all datasets
 cat("\n=== Same CRS? ===\n")
 cat("west cost ezz vs depth: ", same.crs(west_cost_eez, depth), "\n")
-cat("west cost ezz vs SST merge: ", same.crs(west_cost_eez, SST_merge), "\n")
-cat("depth vs SST merge: ", same.crs(depth, SST_merge), "\n")
+cat("west cost ezz vs SST merge: ", same.crs(west_cost_eez, SST_mean), "\n")
+cat("depth vs SST merge: ", same.crs(depth, SST_mean), "\n")
 ```
 
-- Zonal to find the mean of SST data (do I merge them first or after?)
-- At what part of the hw are we making a function: 
-
-To make your workflow generalizable, you must create a function that has the following characteristics:
-
-arguments:
-minimum and maximum sea surface temperature
-minimum and maximum depth
-species name
-outputs:
-map of EEZ regions colored by amount of suitable area
-species name should be included in the map’s title
-
-cell_size function to calculate area (rasterize the vector dataset) Specificy what value you want to cell to take a value on ?rasterize, second raster is to what raster to turn it into
 
 ```{r}
 # Process data
@@ -71,10 +58,108 @@ cell_size function to calculate area (rasterize the vector dataset) Specificy wh
 ## crop depth raster to match the extent of the SST raster (note: the resolutions of the SST and depth data do not match)
 
 depth_crop <- crop(depth, SST_celsius)
+plot(depth_crop)
+
+cat("depth:", dim(depth), "\n")
+cat("depth_crop:", dim(depth_crop), "\n")
+cat("SST celsius:", dim(SST_celsius), "\n")
+
 
 ## resample the depth data to match the resolution of the SST data using the bilinear method approach
 
+resample_depth <- resample(depth_crop, y = SST_celsius, method = "bilinear")
+dim(resample_depth)
+plot(resample_depth)
 
 ## check that the depth and SST match in resolution, extent, and coordinate reference system (hint: can the rasters be stacked?)
 
+sst_depth_zones <- c(SST_celsius, resample_depth)
+plot(sst_depth_zones)
 ```
+
+
+```{r}
+# reclassify SST and depth data into locations that are suitable for oysters (hint: set suitable values to 1 and unsuitable values to 0)
+
+rcl_sst <- matrix(
+    c(-Inf, 11, 0, # Not suitable 
+      11, 30, 1, # Suitable
+      30, Inf, 0 # Not suitable
+    ),
+    ncol = 3,
+    byrow = TRUE)
+
+rcl_depth <- matrix(
+    c(-Inf, -70, 0, # Not suitable 
+      -70, 0, 1, # Suitable
+      0, Inf, 0 # Not suitable
+    ),
+    ncol = 3,
+    byrow = TRUE)
+
+zone_SST <- classify(SST_celsius, rcl = rcl_sst)
+
+zone_depth <- classify(resample_depth, rcl = rcl_depth)
+
+plot(zone_SST)
+plot(zone_depth)
+
+depth_SST_zones <- c(zone_SST, zone_depth)
+plot(depth_SST_zones)
+```
+
+```{r}
+suitable_zones <- lapp(depth_SST_zones, fun = function(sst, depth) sst * depth)
+
+plot(suitable_zones)
+
+
+# Making EEZ crs equal oyster_suitability CRS
+sf::st_crs(west_cost_eez) <- terra::crs(suitable_zones)
+
+# Converting sf object to terra SpatVector
+# eez_vect <- terra::vect(west_cost_eez)
+
+ezz_raster <- rasterize(west_cost_eez, suitable_zones, field = 'rgn_id')
+
+plot(ezz_raster)
+
+# cellsize()
+cellsize <- cellSize(suitable_zones, unit = "km", mask = TRUE)
+
+plot(suitable_cellSize)
+# mask()
+suitable_zone_mask <- mask(cellsize, suitable_zones, maskvalues = 0)
+
+plot(suitable_zone_mask)
+
+# zonal()
+zone <- zonal(suitable_zone_mask, ezz_raster, fun = "sum", na.rm = TRUE)
+
+
+# tibble()
+
+zone_tibble <- as_tibble(zone)
+
+
+# map
+# Joining suitable area to EEZ polygons
+eez_map <- left_join(west_cost_eez, zone_tibble, by = "rgn_id")
+
+# Creating map
+tm_shape(eez_map) +
+    tm_basemap("OpenStreetMap") +
+    tm_fill(
+      fill = "area",
+      fill.legend = tm_legend(title = "Suitable Area (km^2)")
+    ) +
+    tmap_options(component.autoscale = FALSE) +
+    tm_borders(lwd = .8) +
+    tm_title(paste("Suitable", "species_name", "Habitats by West Coast EEZ"), size = 1)
+
+```
+
+Oysters:
+
+* SST: 11-30 deg C
+* depth: 0-70 m below sea level
