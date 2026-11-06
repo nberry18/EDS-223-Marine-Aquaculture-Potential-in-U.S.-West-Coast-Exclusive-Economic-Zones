@@ -68,6 +68,7 @@ resample_depth <- resample(depth_crop, y = SST_celsius, method = "bilinear")
 # Stack the resampled depth and SST data
 sst_depth_zones <- c(SST_celsius, resample_depth)
 plot(sst_depth_zones)
+
 ```
 
 ## Check Resolutions, Extent, and CRS 
@@ -97,6 +98,7 @@ if (all(res(SST_celsius) == res(resample_depth))) {
     if (crs(resample_depth) == crs(SST_celsius)) {
       print("The coordinate reference systems now match!")}
   }
+
 ```
 
 ## Update rasters to reflect suitable and not suitable locations for Oysters 
@@ -252,7 +254,7 @@ suitable_areas(minimum_sst = 11, maximum_sst = 30,
             species_name = "Oysters")
 ```
 
-The map shows that suitable oyster habitat is concentrated along the California coast, with the largest area extending from around Sacramento southward toward Bakersfield (mainly the central California coast). This area best meets the species' sea surface temperature and depth requirements, making them the most favorable locations for aquaculture development. Additional suitable habitat is found along the Washington coast and parts of Southern California, however these regions are not as suitable. Overall, the results suggest that California's EEZ contains the greatest potential for oyster aquaculture on the U.S. West Coast.
+The map highlights that the suitable oyster habitat is concentrated along the California coast, with the largest area extending from around Sacramento southward toward Bakersfield (mainly the central California coast). This area best meets the species' sea surface temperature and depth requirements, making them the most favorable locations for aquaculture development. Additional suitable habitat is found along the Washington coast and parts of Southern California, however these regions are not as suitable. Overall, the results suggest that California's EEZ contains the greatest potential for oyster aquaculture on the U.S. West Coast.
 
 # Function output for Pacific geoduck suitable zones
 
@@ -266,4 +268,4 @@ suitable_areas(minimum_sst = 7, maximum_sst = 19,
             species_name = "Pacific geoduck")
 ```
 
-The map shows that suitable Pacific geoduck habitat is concentrated along the Washington coast. This area best meets the species' sea surface temperature and depth requirements, making this the most favorable locations for aquaculture development. Additional suitable habitat is found along the Oregon coast. The California coast is the least suitable for Pacific geoduck population since the water is warmer and outside of their ideal zones. Overall, the results suggest that Washington's EEZ contains the greatest potential for Pacific geoduck aquaculture on the U.S. West Coast.
+The map highlights that the suitable Pacific geoduck habitat is concentrated along the Washington coast. This area best meets the species' sea surface temperature and depth requirements, making this the most favorable locations for aquaculture development. Additional suitable habitat is found along the Oregon coast. The California coast is the least suitable for Pacific geoduck population since the water is warmer and outside of their ideal zones. Overall, the results suggest that Washington's EEZ contains the greatest potential for Pacific geoduck aquaculture on the U.S. West Coast.
