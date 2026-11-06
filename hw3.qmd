@@ -14,13 +14,12 @@ execute:
 #| output: False
 #| warning: False
 # Load in packages
-library(tidyverse) # 
+library(tidyverse) 
 library(spDataLarge) # R package for large datasets for spatial analysis
-library(sf) # 
-library(stars)
-library(terra)
-library(gt)
-library(tmap)
+library(sf) # spatial vector data
+library(stars) # raster data
+library(terra) # raster data
+library(tmap) # map
 library(viridisLite)
 library(kableExtra) 
 ```
