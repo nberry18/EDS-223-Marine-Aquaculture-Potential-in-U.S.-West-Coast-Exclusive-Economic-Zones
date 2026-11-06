@@ -167,6 +167,8 @@ eez_map |>
 
 ```
 
+This table highlights each zone's suitable habitat area for oysters. Zone 4, Central California, is the most suitable zone with area of 4373.5565 km² where depth and SST meet optimal conditions. 
+
 ## Map of suitable zones for oysters
 ```{r}
 # Map
