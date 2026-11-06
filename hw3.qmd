@@ -63,7 +63,7 @@ SST_celsius <- SST_mean - 273.15 # map alegbra
 depth_crop <- crop(depth, SST_celsius)
 
 # Resample depth data 
-resample_depth <- resample(depth_crop, y = SST_celsius, method = "bilinear") # resample() builds a brand-new raster with exactly the SST raster’s cell layout. It then fills each new cell with a depth value estimated from the original depth.
+resample_depth <- resample(depth_crop, y = SST_celsius, method = "bilinear") 
 
 # Stack the resampled depth and SST data
 sst_depth_zones <- c(SST_celsius, resample_depth)
@@ -101,7 +101,7 @@ if (all(res(SST_celsius) == res(resample_depth))) {
 
 ## Update rasters to reflect suitable and not suitable locations for Oysters 
 ```{r}
-# Reclassify SST raster cells to suitable(1) and not suitable(0) categories for oysters based on the ideal temperature range of 11-30 degrees C
+# Reclassify SST raster cells to suitable(1) and not suitable(0) categories for oysters 
 rcl_sst <- matrix(
     c(-Inf, 11, 0, # Not suitable 
       11, 30, 1, # Suitable
@@ -110,7 +110,7 @@ rcl_sst <- matrix(
     ncol = 3,
     byrow = TRUE)
 
-# Reclassify depth raster cells to suitable(1) and not suitable(0) categories for oysters based on the ideal depth range of 0-70 m
+# Reclassify depth raster cells to suitable(1) and not suitable(0) categories for oysters 
 rcl_depth <- matrix(
     c(-Inf, -70, 0, # Not suitable 
       -70, 0, 1, # Suitable
@@ -131,14 +131,14 @@ depth_SST_zones <- c(zone_SST, zone_depth)
 
 ## Determine suitable zones based on suitable temperatures and depth
 ```{r}
-# lapp()
-suitable_zones <- lapp(depth_SST_zones, fun = function(sst, depth) sst * depth) # lapp() produces new raster by multiplying 0 and 1 to find suitable sst and depth
+# lapp() multiplying 0 and 1 to find suitable sst and depth
+suitable_zones <- lapp(depth_SST_zones, fun = function(sst, depth) sst * depth) 
 
 # Compare west_cost_eez CRS to suitable_zones CRS
 sf::st_crs(west_cost_eez) <- terra::crs(suitable_zones)
 
 # Rasterize: converts vector data into a raster based on suitable_zones raster
-ezz_raster <- rasterize(west_cost_eez, suitable_zones, field = 'rgn_id') # field picks an existing column from EEZ data whose values get written into the raster cells
+ezz_raster <- rasterize(west_cost_eez, suitable_zones, field = 'rgn_id') 
 
 # Cellsize() to create a new raster on the same grid as suitable_zones
 cellsize <- cellSize(suitable_zones, unit = "km", # unit = "km" gives the area in km² 
@@ -241,15 +241,29 @@ suitable_areas <- function(minimum_sst, maximum_sst, minimum_depth, maximum_dept
 ```
 
 # Function output for oyster suitable zones
+
+Suitable conditions:
+- Depth: 0-70 m
+- Temperature: 11-30 C
+
 ```{r}
 suitable_areas(minimum_sst = 11, maximum_sst = 30,
             minimum_depth = -70, maximum_depth = 0,
             species_name = "Oysters")
 ```
 
+The map shows that suitable oyster habitat is concentrated along the California coast, with the largest area extending from around Sacramento southward toward Bakersfield (mainly the central California coast). This area best meets the species' sea surface temperature and depth requirements, making them the most favorable locations for aquaculture development. Additional suitable habitat is found along the Washington coast and parts of Southern California, however these regions are not as suitable. Overall, the results suggest that California's EEZ contains the greatest potential for oyster aquaculture on the U.S. West Coast.
+
 # Function output for Pacific geoduck suitable zones
+
+Suitable conditions:
+- Depth: 0-110 m
+- Temperature: 7-19 C
+
 ```{r}
 suitable_areas(minimum_sst = 7, maximum_sst = 19,
             minimum_depth = -110, maximum_depth = 0,
             species_name = "Pacific geoduck")
 ```
+
+The map shows that suitable Pacific geoduck habitat is concentrated along the Washington coast. This area best meets the species' sea surface temperature and depth requirements, making this the most favorable locations for aquaculture development. Additional suitable habitat is found along the Oregon coast. The California coast is the least suitable for Pacific geoduck population since the water is warmer and outside of their ideal zones. Overall, the results suggest that Washington's EEZ contains the greatest potential for Pacific geoduck aquaculture on the U.S. West Coast.
